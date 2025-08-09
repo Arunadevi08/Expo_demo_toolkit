@@ -1,105 +1,117 @@
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { HeaderButton, Text } from '@react-navigation/elements';
-import {
-  createStaticNavigation,
-  StaticParamList,
-} from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+// Navigation.js
+import React from 'react';
 import { Image } from 'react-native';
-import bell from '../assets/bell.png';
-import newspaper from '../assets/newspaper.png';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+// --- Your screens (replace paths if needed)
 import { Home } from './screens/Home';
+import { Updates } from './screens/Updates';
 import { Profile } from './screens/Profile';
 import { Settings } from './screens/Settings';
-import { Updates } from './screens/Updates';
 import { NotFound } from './screens/NotFound';
 
-const HomeTabs = createBottomTabNavigator({
-  screens: {
-    Home: {
-      screen: Home,
-      options: {
-        title: 'Feed',
-        tabBarIcon: ({ color, size }) => (
-          <Image
-            source={newspaper}
-            tintColor={color}
-            style={{
-              width: size,
-              height: size,
-            }}
-          />
-        ),
-      },
-    },
-    Updates: {
-      screen: Updates,
-      options: {
-        tabBarIcon: ({ color, size }) => (
-          <Image
-            source={bell}
-            tintColor={color}
-            style={{
-              width: size,
-              height: size,
-            }}
-          />
-        ),
-      },
-    },
-  },
-});
+// --- Tab icons (replace with your images)
+import bell from '../assets/bell.png';
+import newspaper from '../assets/newspaper.png';
 
-const RootStack = createNativeStackNavigator({
-  screens: {
-    HomeTabs: {
-      screen: HomeTabs,
-      options: {
-        title: 'Home',
-        headerShown: false,
-      },
-    },
-    Profile: {
-      screen: Profile,
-      linking: {
-        path: ':user(@[a-zA-Z0-9-_]+)',
-        parse: {
-          user: (value) => value.replace(/^@/, ''),
-        },
-        stringify: {
-          user: (value) => `@${value}`,
-        },
-      },
-    },
-    Settings: {
-      screen: Settings,
-      options: ({ navigation }) => ({
-        presentation: 'modal',
-        headerRight: () => (
-          <HeaderButton onPress={navigation.goBack}>
-            <Text>Close</Text>
-          </HeaderButton>
-        ),
-      }),
-    },
-    NotFound: {
-      screen: NotFound,
-      options: {
-        title: '404',
-      },
-      linking: {
-        path: '*',
-      },
-    },
-  },
-});
+// -----------------------------
+// 1) Bottom Tabs (Home + Updates)
+// -----------------------------
+const Tab = createBottomTabNavigator();
 
-export const Navigation = createStaticNavigation(RootStack);
-
-type RootStackParamList = StaticParamList<typeof RootStack>;
-
-declare global {
-  namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
-  }
+function HomeTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerTitleAlign: 'center',
+        tabBarShowLabel: true,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={Home}
+        options={{
+          title: 'Feed',
+          tabBarIcon: ({ color, size }) => (
+            <Image source={newspaper} style={{ width: size, height: size, tintColor: color }} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Updates"
+        component={Updates}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Image source={bell} style={{ width: size, height: size, tintColor: color }} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
 }
+
+// -----------------------------
+// 2) Root Stack
+// - Hosts tabs as the main screen
+// - Profile as a normal push screen
+// - Settings shown as a modal
+// - NotFound fallback
+// -----------------------------
+const Stack = createNativeStackNavigator();
+
+export default function Navigation() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        {/* Main tabs (no header from Stack, use Tab headers) */}
+        <Stack.Screen
+          name="HomeTabs"
+          component={HomeTabs}
+          options={{ headerShown: false }}
+        />
+
+        {/* Normal push screen */}
+        <Stack.Screen
+          name="Profile"
+          component={Profile}
+          options={{ title: 'Profile' }}
+        />
+
+        {/* Modal group (iOS-style sheet on iOS, normal on Android by default) */}
+        <Stack.Group screenOptions={{ presentation: 'modal' }}>
+          <Stack.Screen
+            name="Settings"
+            component={Settings}
+            options={{ title: 'Settings' }}
+          />
+        </Stack.Group>
+
+        {/* Fallback screen */}
+        <Stack.Screen
+          name="NotFound"
+          component={NotFound}
+          options={{ title: '404' }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+/*
+USAGE NOTES
+-----------
+- Place <Navigation /> in your App.js:
+    export default function App() { return <Navigation />; }
+
+- Navigate to screens:
+    // From anywhere with access to `navigation`:
+    navigation.navigate('Profile');       // push Profile
+    navigation.navigate('Settings');      // open modal
+
+- Pass params:
+    navigation.navigate('Profile', { userId: '123' });
+
+- Add deep linking later (optional) by passing `linking` to <NavigationContainer />.
+*/

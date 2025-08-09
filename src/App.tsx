@@ -4,7 +4,7 @@ import { Asset } from 'expo-asset';
 import * as SplashScreen from 'expo-splash-screen';
 import * as React from 'react';
 import { useColorScheme } from 'react-native';
-import { Navigation } from './navigation';
+import  Navigation  from './navigation';
 
 Asset.loadAsync([
   ...NavigationAssets,
